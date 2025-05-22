@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "equitrecmobile",
+    "name": "Application Equitrec",
     "slug": "equitrecmobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -26,6 +26,7 @@
     "plugins": [
       "expo-router",
       [
+
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

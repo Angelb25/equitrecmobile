@@ -1,86 +1,70 @@
-import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
-import React, { useState } from 'react';
+import React from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import QrScannerScreen from './QrScannerScreen'; // <-- importer le composant
 
-export default function QuickLoginScreen() {
-  const [showScanner, setShowScanner] = useState(false);
-
-  if (showScanner) {
-    return <QrScannerScreen onClose={() => setShowScanner(false)} />;
-  }
-
+const ConnexionRapideScreen = () => {
   return (
-    <View style={styles.background}>
-      <BlurView intensity={50} tint="light" style={styles.blurContainer}>
-        <SafeAreaView style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Image
-              source={require('../../assets/Logo32.png')} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Ionicons name="person-circle-outline" size={28} color="white" />
-          </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/Logo32.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+      <View style={styles.body}>
+        <Text style={styles.title}>Connexion rapide</Text>
+        <Text style={styles.subtitle}>Scannez le QR Code pour vous connecter</Text>
 
-          {/* Contenu principal */}
-          <View style={styles.content}>
-            <Text style={styles.title}>Connexion rapide</Text>
-            <Text style={styles.subtitle}>Scannez le QR Code pour vous connecter</Text>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setShowScanner(true)}
-            >
-              <Text style={styles.buttonText}>Scanner un QR Code</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </BlurView>
-    </View>
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>Scanner un QR Code</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: '#333333' },
-  blurContainer: { flex: 1 },
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: '#5c5c5c', // Gris foncé
+  },
   header: {
-    backgroundColor: '#E4A100',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    height: 60,
+    backgroundColor: '#d4aa2f', // Bandeau jaune
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  logo: { width: 32, height: 32 },
-  content: {
+  logo: {
+    height: 40,
+    width: 40,
+  },
+  body: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
+    color: '#fff',
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#FFFFFF',
+    marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    color: '#e0e0e0',
     marginBottom: 30,
-    textAlign: 'center',
   },
   button: {
-    backgroundColor: '#F3F3F3',
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 10,
+    backgroundColor: '#cbd9ff',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 25,
   },
   buttonText: {
-    fontSize: 16,
     color: '#000',
+    fontSize: 16,
   },
 });
+
+export default ConnexionRapideScreen;

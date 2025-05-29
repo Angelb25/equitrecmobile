@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { Button, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, Image, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 const ConnexionRapideScreen = () => {
   const gotoqrcode = () => {
-    // Navigation logic to QR code scanner
     console.log('Navigating to QR Code Scanner...');
     router.push('/screen_free/qrcode/scan');
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -20,10 +20,7 @@ const ConnexionRapideScreen = () => {
       <View style={styles.body}>
         <Text style={styles.title}>Connexion rapide</Text>
         <Text style={styles.subtitle}>Scannez le QR Code pour vous connecter</Text>
-        <Button title='Scanner un QR Code' onPress={() => {gotoqrcode()}} />
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Scanner un QR Code</Text>
-        </TouchableOpacity>
+        <Button title='Scanner un QR Code' onPress={gotoqrcode} />
       </View>
     </SafeAreaView>
   );
@@ -32,11 +29,11 @@ const ConnexionRapideScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#5c5c5c', // Gris foncé
+    backgroundColor: '#5c5c5c',
   },
   header: {
     height: 60,
-    backgroundColor: '#d4aa2f', // Bandeau jaune
+    backgroundColor: '#d4aa2f',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -60,16 +57,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#e0e0e0',
     marginBottom: 30,
-  },
-  button: {
-    backgroundColor: '#cbd9ff',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 25,
-  },
-  buttonText: {
-    color: '#000',
-    fontSize: 16,
   },
 });
 

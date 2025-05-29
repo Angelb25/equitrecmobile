@@ -15,6 +15,19 @@ const FicheNotationScreen = () => {
   const [style, setStyle] = useState('');
   const [precision, setPrecision] = useState('');
 
+  const [penalites, setPenalites] = useState({
+    chute: false,
+    dépassementTemps: false,
+    refusObstacle: false,
+  });
+
+  const toggleCheckbox = (key: keyof typeof penalites) => {
+    setPenalites((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -24,7 +37,6 @@ const FicheNotationScreen = () => {
         </TouchableOpacity>
 
         <Image source={require('../../assets/Logo32.png')} style={styles.logo} />
-
       </View>
 
       {/* Image Header */}
@@ -81,6 +93,26 @@ const FicheNotationScreen = () => {
             <Picker.Item label="Moyenne" value="moyenne" />
             <Picker.Item label="Faible" value="faible" />
           </Picker>
+        </View>
+
+        {/* Checkbox Section */}
+        <View style={styles.checkboxSection}>
+          <Text style={styles.checkboxTitle}>Pénalités</Text>
+
+          {[
+            { key: 'chute', label: 'Chute' },
+            { key: 'dépassementTemps', label: 'Dépassement de temps' },
+            { key: 'refusObstacle', label: 'Refus d’obstacle' },
+          ].map(({ key, label }) => (
+            <TouchableOpacity
+              key={key}
+              style={styles.checkboxRow}
+              onPress={() => toggleCheckbox(key as keyof typeof penalites)}
+            >
+              <View style={[styles.checkbox, penalites[key as keyof typeof penalites] && styles.checkboxChecked]} />
+              <Text style={styles.checkboxLabel}>{label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <TouchableOpacity style={styles.saveButton}>
@@ -168,6 +200,36 @@ const styles = StyleSheet.create({
     height: 40,
     width: '100%',
     color: '#000',
+  },
+
+  // Checkbox Section
+  checkboxSection: {
+    marginTop: 20,
+    width: '100%',
+  },
+  checkboxTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#000',
+    marginRight: 10,
+    borderRadius: 4,
+  },
+  checkboxChecked: {
+    backgroundColor: '#d4aa2f',
+  },
+  checkboxLabel: {
+    fontSize: 16,
   },
 
   // Save Button

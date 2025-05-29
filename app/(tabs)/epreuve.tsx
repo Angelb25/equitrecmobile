@@ -1,11 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { FlatList, Image, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
-const participants = [
-  { id: "1", name: "Camille Morel" },
-  { id: "2", name: "Claire Dubois" },
-  { id: "3", name: "Léa Fontaine" },
+const dossards = [
+  { id: "1" }, { id: "2" }, { id: "3" }, { id: "4" },
+  { id: "5" }, { id: "6" }, { id: "7" }, { id: "8" },
+  { id: "9" }, { id: "10" },
 ];
 
 export default function EpreuveScreen() {
@@ -14,7 +13,7 @@ export default function EpreuveScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Image source={require("../../assets/Logo32.png")} style={styles.logo} />
-        <Ionicons name="person-circle-outline" size={30} color="black" />
+        {/* Profil icon removed */}
       </View>
 
       {/* Image de fond */}
@@ -28,28 +27,18 @@ export default function EpreuveScreen() {
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <Text style={styles.cardDate}>29/04/25{"\n"}Lyon</Text>
-            <View style={styles.cardDescription}>
-              <Text style={styles.cardLabel}>Descriptif :</Text>
-              <Text>Ouvrir et refermer une porte{"\n"}en restant à cheval</Text>
-            </View>
+            {/* Description removed */}
           </View>
         </View>
 
-        {/* Liste des participants */}
-        <FlatList
-          data={participants}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.participantRow}>
-              <View style={styles.participantRank}>
-                <Text>{item.id}</Text>
-              </View>
-              <View style={styles.participantName}>
-                <Text>{item.name}</Text>
-              </View>
+        {/* Grille de dossards */}
+        <View style={styles.grid}>
+          {dossards.map((item) => (
+            <View key={item.id} style={styles.dossard}>
+              <Text style={styles.dossardText}>{item.id}</Text>
             </View>
-          )}
-        />
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -62,7 +51,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   logo: { width: 40, height: 40, resizeMode: "contain" },
@@ -88,26 +77,28 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   cardRow: { flexDirection: "row" },
-  cardDate: { width: "35%", fontWeight: "bold" },
-  cardDescription: { flex: 1 },
-  cardLabel: { fontWeight: "bold" },
-  participantRow: {
+  cardDate: { width: "100%", fontWeight: "bold" },
+
+  // Grille de dossards
+  grid: {
     flexDirection: "row",
-    borderWidth: 0.5,
-    borderColor: "#999",
-    marginBottom: 2,
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 10,
   },
-  participantRank: {
-    width: 40,
-    backgroundColor: "#ddd",
+  dossard: {
+    width: 60,
+    height: 60,
+    backgroundColor: "#eee",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
+    margin: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#bbb",
   },
-  participantName: {
-    flex: 1,
-    justifyContent: "center",
-    paddingVertical: 10,
-    paddingLeft: 10,
+  dossardText: {
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

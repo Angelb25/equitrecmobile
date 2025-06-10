@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Image } from 'react-native';
-
 import {
-    Dimensions,
-    FlatList,
-    ImageBackground,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    View,
+  Dimensions,
+  FlatList,
+  Image,
+  ImageBackground,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface Epreuve {
@@ -27,27 +27,39 @@ const data: Epreuve[] = Array.from({ length: 9 }, (_, i) => ({
 }));
 
 const ListeEpreuves: React.FC = () => {
+  const handleNomPress = (epreuve: Epreuve) => {
+    console.log('Épreuve cliquée :', epreuve.nom);
+    // Tu peux naviguer vers une autre page ici
+  };
+
   const renderItem = ({ item }: { item: Epreuve }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.id}</Text>
-      <Text style={styles.cell}>{item.nom}</Text>
+
+      <TouchableOpacity
+        style={styles.cell}
+        onPress={() => handleNomPress(item)}
+      >
+        <Text style={[styles.cell, styles.link]}>{item.nom}</Text>
+      </TouchableOpacity>
+
       <Text style={styles.cell}>{item.lieu}</Text>
       <Text style={styles.cell}>{item.date}</Text>
     </View>
   );
 
   return (
-    
     <SafeAreaView style={styles.container}>
-     {/* Header */}
-        <View style={styles.header}>
-            <Image
-                source={require('../../assets/Logo32.png')} 
-                style={styles.logo}
-                resizeMode="contain"
-            />
-            <Ionicons name="person-circle-outline" size={28} color="white" />
-        </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/Logo32.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Ionicons name="person-circle-outline" size={28} color="white" />
+      </View>
+
       <ImageBackground
         source={require('../../assets/horse.png')}
         style={styles.banner}
@@ -86,12 +98,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 15,
   },
-  avatar: {
-    width: 25,
-    height: 25,
-    backgroundColor: '#fff',
-    borderRadius: 12.5,
-  },
   banner: {
     width: '100%',
     height: 180,
@@ -124,6 +130,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     color: '#333',
+  },
+  link: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
   },
 });
 

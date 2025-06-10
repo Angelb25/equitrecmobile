@@ -61,7 +61,7 @@ const FicheNotationScreen = () => {
             style={styles.picker}
             dropdownIconColor="#000"
           >
-            <Picker.Item label="" value="" />
+            <Picker.Item label="Liste" value="" />
             <Picker.Item label="Oui" value="oui" />
             <Picker.Item label="Non" value="non" />
           </Picker>
@@ -74,7 +74,7 @@ const FicheNotationScreen = () => {
             style={styles.picker}
             dropdownIconColor="#000"
           >
-            <Picker.Item label="" value="" />
+            <Picker.Item label="Liste" value="" />
             <Picker.Item label="Excellent" value="excellent" />
             <Picker.Item label="Correct" value="correct" />
             <Picker.Item label="Mauvais" value="mauvais" />
@@ -88,7 +88,7 @@ const FicheNotationScreen = () => {
             style={styles.picker}
             dropdownIconColor="#000"
           >
-            <Picker.Item label="" value="" />
+            <Picker.Item label="Liste" value="" />
             <Picker.Item label="Bonne" value="bonne" />
             <Picker.Item label="Moyenne" value="moyenne" />
             <Picker.Item label="Faible" value="faible" />

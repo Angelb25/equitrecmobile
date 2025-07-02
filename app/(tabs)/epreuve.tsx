@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   SafeAreaView,
@@ -10,62 +12,114 @@ import {
   View,
 } from "react-native";
 
-// Liste de dossards
-const dossards = [
-  { id: "1111" }, { id: "1112" }, { id: "1113" }, { id: "1114" },
-  { id: "1115" }, { id: "1116" }, { id: "1117" }, { id: "1118" },
-  { id: "1119" },
-];
+interface Cavalier {
+  cavalier_id: number;
+  nom: string;
+  dossard: number;
+  niveau: string;
+}
+
+interface Competition {
+  nom: string;
+  date: string;
+  location: string;
+}
+
+interface Epreuve {
+  nom: string;
+  description: string;
+  materiels: string;
+}
+
+interface ApiResponse {
+  competition: Competition;
+  cavaliers: Cavalier[];
+  epreuves: Epreuve[];
+}
 
 export default function EpreuveScreen() {
-  const [selectedId, setSelectedId] = useState(null);
+  const { nom } = useLocalSearchParams();
+  const router = useRouter();
+  const [competition, setCompetition] = useState<Competition | null>(null);
+  const [epreuve, setEpreuve] = useState<Epreuve | null>(null);
+  const [cavaliers, setCavaliers] = useState<Cavalier[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handlePress = (id) => {
+  const apiUrl = `http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55`;
+
+  useEffect(() => {
+    fetch(apiUrl)
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur serveur");
+        return res.json();
+      })
+      .then((json: ApiResponse) => {
+        setCompetition(json.competition);
+        const found = json.epreuves.find((e) => e.nom === nom);
+        if (!found) {
+          setError("\u00c9preuve non trouv\u00e9e");
+        } else {
+          setEpreuve(found);
+          setCavaliers(json.cavaliers);
+        }
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handlePress = (id: number) => {
     setSelectedId(id);
-    console.log("Dossard cliqué :", id);
+    router.push({
+      pathname: '/fichenotation',
+      params: { dossard: id, epreuve: nom },
+    });
   };
 
+  if (loading) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (error) return <Text style={styles.error}>Erreur : {error}</Text>;
+  if (!competition || !epreuve) return <Text style={styles.error}>Donn\u00e9es non disponibles</Text>;
+
+  const formattedDate = new Date(competition.date).toLocaleDateString("fr-FR");
+
   return (
-    
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Image source={require('../../assets/Logo32.png')} style={styles.logo} />
       </View>
-      {/* Image Header */}
+
       <ImageBackground
         source={require('../../assets/horse.png')}
         style={styles.imageHeader}
         resizeMode="cover"
       >
         <View style={styles.titleOverlay}>
-          <Text style={styles.titleText}>Fiche notation</Text>
+          <Text style={styles.titleText}>\u00c9preuve</Text>
         </View>
       </ImageBackground>
-      {/* Contenu principal */}
+
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.titre}>nomepreuve</Text>
+        <Text style={styles.titre}>{epreuve.nom}</Text>
 
         <View style={styles.card}>
           <View style={styles.cardRow}>
-            <Text style={styles.cardDate}>29/04/25{"\n"}Lyon</Text>
+            <Text style={styles.cardDate}>
+              {formattedDate}{"\n"}{competition.location}
+            </Text>
           </View>
         </View>
 
-        {/* Grille de dossards */}
         <View style={styles.grid}>
-          {dossards.map((item) => {
-            const isSelected = selectedId === item.id;
+          {cavaliers.map((cavalier) => {
+            const isSelected = selectedId === cavalier.dossard;
             return (
               <TouchableOpacity
-                key={item.id}
-                style={[
-                  styles.dossard,
-                  isSelected && styles.dossardSelected,
-                ]}
-                onPress={() => handlePress(item.id)}
+                key={cavalier.dossard}
+                style={[styles.dossard, isSelected && styles.dossardSelected]}
+                onPress={() => handlePress(cavalier.dossard)}
               >
-                <Text style={styles.dossardText}>{item.id}</Text>
+                <Text style={styles.dossardText}>{cavalier.dossard}</Text>
               </TouchableOpacity>
             );
           })}
@@ -86,15 +140,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: { width: 40, height: 40, resizeMode: "contain" },
-  heroImage: { width: "100%", height: 200 },
-  heroText: {
-    position: "absolute",
-    top: 160,
-    alignSelf: "center",
-    fontSize: 28,
-    color: "#fff",
-    fontWeight: "bold",
-  },
   content: { padding: 16 },
   titre: {
     fontSize: 28,
@@ -109,8 +154,6 @@ const styles = StyleSheet.create({
   },
   cardRow: { flexDirection: "row" },
   cardDate: { width: "100%", fontWeight: "bold" },
-
-  // Grille de dossards
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -136,7 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-// Image Header
   imageHeader: {
     width: '100%',
     height: 180,
@@ -155,5 +197,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-
-});
+  error: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 40,
+  },
+});   

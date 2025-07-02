@@ -60,6 +60,15 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="api"
+        options={{
+          title: 'API',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cloud-outline" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

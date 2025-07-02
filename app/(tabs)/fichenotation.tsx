@@ -1,41 +1,100 @@
-import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
 import {
   Image,
   ImageBackground,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
-const FicheNotationScreen = () => {
-  const [centre, setCentre] = useState('');
-  const [style, setStyle] = useState('');
-  const [precision, setPrecision] = useState('');
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 
+const FicheNotationScreen = () => {
+  const { dossard, epreuve } = useLocalSearchParams();
+  const [contrat, setContrat] = useState('');
+  const [allure, setAllure] = useState('');
   const [penalites, setPenalites] = useState({
-    chute: false,
-    dépassementTemps: false,
-    refusObstacle: false,
+    piedSorti: false,
+    brutalite: false,
+    franchissementDangereux: false,
   });
 
-  const toggleCheckbox = (key: keyof typeof penalites) => {
-    setPenalites((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const getContratPoints = () => {
+    switch (contrat) {
+      case 'réalisé': return 7;
+      case '1 faute': return 4;
+      case '2 fautes': return 1;
+      case '3 fautes': return 0;
+      default: return 0;
+    }
   };
+
+  const getAllurePoints = () => {
+    return allure === 'galop' ? 3 : allure === 'trot' ? -2 : 0;
+  };
+
+  const getPenalitesPoints = () => {
+    let total = 0;
+    if (penalites.piedSorti) total -= 10;
+    if (penalites.brutalite) total -= 10;
+    if (penalites.franchissementDangereux) total -= 10;
+    return total;
+  };
+
+  const renderCheckbox = (selectedValue: string, setValue: (v: string) => void, label: string, value: string) => (
+    <TouchableOpacity
+      style={styles.checkboxRow}
+      onPress={() => setValue(value)}
+    >
+      <View style={[
+        styles.checkbox,
+        selectedValue === value && styles.checkboxChecked,
+      ]} />
+      <Text style={styles.checkboxLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+
+  // Récupération du nom et prénom du juge via l'API
+  const [nomJuge, setNomJuge] = useState('');
+  const [prenomJuge, setPrenomJuge] = useState('');
+
+  useEffect(() => {
+    fetch('http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55')
+      .then((res) => res.json())
+      .then((json) => {
+        // On récupère le juge de l'épreuve sélectionnée si possible, sinon le juge global
+        let firstname = '';
+        let surename = '';
+        if (json && json.epreuves && epreuve) {
+          const epreuveData = json.epreuves.find((e) => e.nom === epreuve);
+          if (epreuveData && epreuveData.juge) {
+            firstname = epreuveData.juge.firstname || '';
+            surename = epreuveData.juge.surename || '';
+          }
+        }
+        // Fallback sur le juge global si pas trouvé dans l'épreuve
+        if ((!firstname || !surename) && json && json.juge) {
+          firstname = json.juge.firstname || '';
+          surename = json.juge.surename || '';
+        }
+        setNomJuge(surename);
+        setPrenomJuge(firstname);
+      })
+      .catch(() => {
+        setNomJuge('');
+        setPrenomJuge('');
+      });
+  }, [epreuve]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header (plus de flèche ni nom du juge ici) */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerSideIcon}>
-          <Text style={styles.headerIcon}>◀</Text>
-        </TouchableOpacity>
-
         <Image source={require('../../assets/Logo32.png')} style={styles.logo} />
       </View>
 
@@ -46,79 +105,53 @@ const FicheNotationScreen = () => {
         resizeMode="cover"
       >
         <View style={styles.titleOverlay}>
+          {/* Nom du juge en blanc et plus haut */}
+          <Text style={styles.judgeTextWhite}>Juge : {nomJuge} {prenomJuge}</Text>
           <Text style={styles.titleText}>Fiche notation</Text>
         </View>
       </ImageBackground>
 
-      {/* Form content */}
-      <View style={styles.form}>
-        <Text style={styles.name}>Camille DUPONT</Text>
+      <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={true}>
+        <Text style={styles.name}>Dossard : {dossard || '-'} | Épreuve : {epreuve || '-'}</Text>
 
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={centre}
-            onValueChange={(itemValue) => setCentre(itemValue)}
-            style={styles.picker}
-            dropdownIconColor="#000"
+        {/* CONTRAT */}
+        <Text style={styles.sectionTitle}>Contrat</Text>
+        {renderCheckbox(contrat, setContrat, 'Réalisé', 'réalisé')}
+        {renderCheckbox(contrat, setContrat, '1 faute', '1 faute')}
+        {renderCheckbox(contrat, setContrat, '2 fautes', '2 fautes')}
+        {renderCheckbox(contrat, setContrat, '3 fautes', '3 fautes')}
+        <Text style={styles.totalText}>Total C: {getContratPoints()}</Text>
+
+        {/* ALLURES */}
+        <Text style={styles.sectionTitle}>Allures</Text>
+        {renderCheckbox(allure, setAllure, 'Galop', 'galop')}
+        {renderCheckbox(allure, setAllure, 'Trot', 'trot')}
+        <Text style={styles.totalText}>Total A: {getAllurePoints()}</Text>
+
+        {/* PÉNALITÉS */}
+        <Text style={styles.sectionTitle}>Pénalités</Text>
+        {[
+          { key: 'piedSorti', label: 'Pied sorti du couloir' },
+          { key: 'brutalite', label: 'Brutalité' },
+          { key: 'franchissementDangereux', label: 'Franchissement dangereux' },
+        ].map(({ key, label }) => (
+          <TouchableOpacity
+            key={key}
+            style={styles.checkboxRow}
+            onPress={() =>
+              setPenalites((prev) => ({ ...prev, [key]: !prev[key as keyof typeof penalites] }))
+            }
           >
-            <Picker.Item label="Liste" value="" />
-            <Picker.Item label="Oui" value="oui" />
-            <Picker.Item label="Non" value="non" />
-          </Picker>
-        </View>
-
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={style}
-            onValueChange={(itemValue) => setStyle(itemValue)}
-            style={styles.picker}
-            dropdownIconColor="#000"
-          >
-            <Picker.Item label="Liste" value="" />
-            <Picker.Item label="Excellent" value="excellent" />
-            <Picker.Item label="Correct" value="correct" />
-            <Picker.Item label="Mauvais" value="mauvais" />
-          </Picker>
-        </View>
-
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={precision}
-            onValueChange={(itemValue) => setPrecision(itemValue)}
-            style={styles.picker}
-            dropdownIconColor="#000"
-          >
-            <Picker.Item label="Liste" value="" />
-            <Picker.Item label="Bonne" value="bonne" />
-            <Picker.Item label="Moyenne" value="moyenne" />
-            <Picker.Item label="Faible" value="faible" />
-          </Picker>
-        </View>
-
-        {/* Checkbox Section */}
-        <View style={styles.checkboxSection}>
-          <Text style={styles.checkboxTitle}>Pénalités</Text>
-
-          {[
-            { key: 'chute', label: 'Chute' },
-            { key: 'dépassementTemps', label: 'Dépassement de temps' },
-            { key: 'refusObstacle', label: 'Refus d’obstacle' },
-          ].map(({ key, label }) => (
-            <TouchableOpacity
-              key={key}
-              style={styles.checkboxRow}
-              onPress={() => toggleCheckbox(key as keyof typeof penalites)}
-            >
-              <View style={[styles.checkbox, penalites[key as keyof typeof penalites] && styles.checkboxChecked]} />
-              <Text style={styles.checkboxLabel}>{label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+            <View style={[styles.checkbox, penalites[key as keyof typeof penalites] && styles.checkboxChecked]} />
+            <Text style={styles.checkboxLabel}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+        <Text style={styles.totalText}>Total P: {getPenalitesPoints()}</Text>
 
         <TouchableOpacity style={styles.saveButton}>
           <Text style={styles.saveButtonText}>Sauvegarder</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -130,16 +163,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-
-  // Header
   header: {
-    height: 50,
+    height: 60,
     backgroundColor: '#d4aa2f',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     paddingHorizontal: 10,
     position: 'relative',
+  },
+  judgeTextWhite: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+    alignSelf: 'center',
   },
   headerSideIcon: {
     width: 40,
@@ -157,8 +195,6 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -16 }],
   },
-
-  // Image Header
   imageHeader: {
     width: '100%',
     height: 180,
@@ -177,72 +213,62 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-
-  // Form
   form: {
-    padding: 20,
-    alignItems: 'center',
+    padding: 16,
   },
   name: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 25,
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  pickerContainer: {
-    width: '100%',
-    borderBottomWidth: 2,
-    borderBottomColor: '#999',
-    marginBottom: 15,
-    height: 40,
-    justifyContent: 'center',
-  },
-  picker: {
-    height: 40,
-    width: '100%',
-    color: '#000',
-  },
-
-  // Checkbox Section
-  checkboxSection: {
-    marginTop: 20,
-    width: '100%',
-  },
-  checkboxTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginTop: 16,
+    marginBottom: 8,
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: '#000',
-    marginRight: 10,
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: '#888',
     borderRadius: 4,
+    marginRight: 10,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#d4aa2f',
+    backgroundColor: '#ccb157',
+    borderColor: '#a88e3a',
   },
   checkboxLabel: {
-    fontSize: 16,
+    fontSize: 15,
+    color: '#333',
   },
-
-  // Save Button
+  totalText: {
+    fontWeight: 'bold',
+    marginTop: 4,
+    marginBottom: 8,
+    fontSize: 15,
+    textAlign: 'right',
+  },
   saveButton: {
-    backgroundColor: '#d4aa2f',
-    borderRadius: 30,
-    paddingHorizontal: 40,
+    backgroundColor: '#ccb157',
     paddingVertical: 12,
-    marginTop: 30,
+    borderRadius: 8,
+    marginTop: 24,
+    alignItems: 'center',
   },
   saveButtonText: {
-    fontSize: 16,
+    color: '#fff',
     fontWeight: 'bold',
-    color: '#000',
+    fontSize: 16,
   },
 });

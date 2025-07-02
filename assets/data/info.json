@@ -1,0 +1,65 @@
+{
+    "competition": {
+        "nom": "Test API Compétition Juin",
+        "date": "2025-06-30T08:00:00.000Z",
+        "statut": null,
+        "location": "Manège de Test",
+        "created_by": null
+    },
+    "juge": {
+        "firstname": "Jean",
+        "surename": "Dupont"
+    },
+    "cavaliers": [
+        {
+            "cavalier_id": 3,
+            "nom": "Durand",
+            "dossard": 88,
+            "niveau_id": 1,
+            "niveau": "Club Poney 3"
+        },
+        {
+            "cavalier_id": 1,
+            "nom": "Dupont",
+            "dossard": 75,
+            "niveau_id": 3,
+            "niveau": "Club Poney 1"
+        },
+        {
+            "cavalier_id": 2,
+            "nom": "Martin",
+            "dossard": 66,
+            "niveau_id": 7,
+            "niveau": "Amateur 1"
+        }
+    ],
+    "epreuves": [
+        {
+            "nom": "Dressage Test",
+            "description": "Test de dressage niveau club",
+            "materiels": "Barres, plots",
+            "fiche_notation": null,
+            "juge": {
+                "firstname": "Jean",
+                "surename": "Dupont"
+            },
+            "niveaux": [
+                {
+                    "niveau_id": 3,
+                    "niveau_nom": "Club Poney 1",
+                    "exigence": "Haut niveau"
+                },
+                {
+                    "niveau_id": 7,
+                    "niveau_nom": "Amateur 1",
+                    "exigence": "Haut niveau"
+                },
+                {
+                    "niveau_id": 1,
+                    "niveau_nom": "Club Poney 3",
+                    "exigence": "Haut niveau"
+                }
+            ]
+        }
+    ]
+}

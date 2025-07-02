@@ -16,7 +16,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "com.angelb25.equitrecmobile"
     },
     "web": {
       "bundler": "metro",
@@ -26,7 +30,6 @@
     "plugins": [
       "expo-router",
       [
-
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -39,6 +42,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bb98773c-b9d3-46dd-9866-ba2b8de49f6b"
+      }
     }
   }
 }

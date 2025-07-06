@@ -59,41 +59,60 @@ const FicheNotationScreen = () => {
   );
 
 
-  // Récupération du nom et prénom du juge via l'API
+  // Récupération du nom du juge via l'API
   const [nomJuge, setNomJuge] = useState('');
-  const [prenomJuge, setPrenomJuge] = useState('');
 
   useEffect(() => {
     fetch('http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55')
       .then((res) => res.json())
       .then((json) => {
         // On récupère le juge de l'épreuve sélectionnée si possible, sinon le juge global
-        let firstname = '';
         let surename = '';
         if (json && json.epreuves && epreuve) {
           const epreuveData = json.epreuves.find((e) => e.nom === epreuve);
           if (epreuveData && epreuveData.juge) {
-            firstname = epreuveData.juge.firstname || '';
             surename = epreuveData.juge.surename || '';
           }
         }
         // Fallback sur le juge global si pas trouvé dans l'épreuve
-        if ((!firstname || !surename) && json && json.juge) {
-          firstname = json.juge.firstname || '';
+        if (!surename && json && json.juge) {
           surename = json.juge.surename || '';
         }
         setNomJuge(surename);
-        setPrenomJuge(firstname);
       })
       .catch(() => {
         setNomJuge('');
-        setPrenomJuge('');
       });
   }, [epreuve]);
 
+  // Fonction pour handle le bouton sauvegarder
+  const handleSave = () => {
+    // Exemple de structure, à adapter selon les vrais IDs
+    const notation = {
+      notations: [
+        {
+          epreuve_id: 5, // à remplacer par la vraie valeur si dispo
+          niveau_id: 5, // à remplacer par la vraie valeur si dispo
+          cavaliers: [
+            {
+              cavalier_id: dossard, 
+              allure: allure,
+              penalite: Object.keys(penalites).filter((k) => penalites[k as keyof typeof penalites]),
+              contrat: getContratPoints(),
+              total: getContratPoints() + getAllurePoints() + getPenalitesPoints(),
+              style: 'S',
+              notation_id: null,
+            },
+          ],
+        },
+      ],
+    };
+    console.log('JSON sauvegarde:', JSON.stringify(notation, null, 2));
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header (plus de flèche ni nom du juge ici) */}
+      {/* Header */}
       <View style={styles.header}>
         <Image source={require('../../assets/Logo32.png')} style={styles.logo} />
       </View>
@@ -106,7 +125,6 @@ const FicheNotationScreen = () => {
       >
         <View style={styles.titleOverlay}>
           {/* Nom du juge en blanc et plus haut */}
-          <Text style={styles.judgeTextWhite}>Juge : {nomJuge} {prenomJuge}</Text>
           <Text style={styles.titleText}>Fiche notation</Text>
         </View>
       </ImageBackground>
@@ -148,7 +166,7 @@ const FicheNotationScreen = () => {
         ))}
         <Text style={styles.totalText}>Total P: {getPenalitesPoints()}</Text>
 
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Sauvegarder</Text>
         </TouchableOpacity>
       </ScrollView>

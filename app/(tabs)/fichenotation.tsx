@@ -1,14 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
-
 import {
   Image,
   ImageBackground,
   SafeAreaView,
-  ScrollView,
-  Text,
+  ScrollView, StyleSheet, Text,
   TextInput,
   TouchableOpacity,
   View
@@ -27,8 +24,12 @@ const FicheNotationScreen = () => {
     brutalite: false,
     franchissementDangereux: false,
   });
+
   const [nomJuge, setNomJuge] = useState('');
   const [cavalierId, setCavalierId] = useState(null);
+  const [epreuveId, setEpreuveId] = useState(null);
+  const [niveauId, setNiveauId] = useState(null);
+
   useEffect(() => {
     fetch('http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55')
       .then((res) => res.json())
@@ -40,17 +41,22 @@ const FicheNotationScreen = () => {
           if (epreuveData?.juge?.surename) {
             surename = epreuveData.juge.surename;
           }
+          if (epreuveData?.id) {
+            setEpreuveId(epreuveData.id);
+          }
         }
+
         if (!surename && json?.juge?.surename) {
           surename = json.juge.surename;
         }
         setNomJuge(surename);
 
-        // 🔹 Récupération du cavalier_id via dossard
+        // 🔹 Récupération du cavalier_id et niveau_id via dossard
         if (json?.cavaliers && dossard) {
           const cavalier = json.cavaliers.find(c => c.dossard === Number(dossard));
           if (cavalier) {
             setCavalierId(cavalier.cavalier_id);
+            setNiveauId(cavalier.niveau_id); // ✅ ici on récupère niveau_id
           }
         }
       })
@@ -96,8 +102,8 @@ const FicheNotationScreen = () => {
 
   const handleSave = () => {
     const newNotation = {
-      epreuve_id: 5,
-      niveau_id: 5,
+      epreuve_id: epreuveId,
+      niveau_id: niveauId,
       cavaliers: [
         {
           cavalier_id: cavalierId,
@@ -151,7 +157,7 @@ const FicheNotationScreen = () => {
         </Text>
 
         <Text style={{ textAlign: 'center', fontSize: 14, marginBottom: 10 }}>
-          Cavalier ID : {cavalierId ?? 'Non trouvé'}
+          Cavalier ID : {cavalierId ?? 'Non trouvé'} | Niveau ID : {niveauId ?? 'Non trouvé'}
         </Text>
 
         <Text style={styles.sectionTitle}>Contrat</Text>
@@ -210,6 +216,7 @@ const FicheNotationScreen = () => {
 };
 
 export default FicheNotationScreen;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: {

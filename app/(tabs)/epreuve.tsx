@@ -48,7 +48,7 @@ export default function EpreuveScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const apiUrl = `http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55`;
+  const apiUrl = `http://prod-project-32/api/qrcode/getCompetitionDataFromToken?token=55`;
 
   useEffect(() => {
     fetch(apiUrl)

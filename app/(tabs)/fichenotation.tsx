@@ -1,27 +1,63 @@
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+
 import {
   Image,
   ImageBackground,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
-
-import { useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
 
 const FicheNotationScreen = () => {
   const { dossard, epreuve } = useLocalSearchParams();
+  const router = useRouter();
+
   const [contrat, setContrat] = useState('');
   const [allure, setAllure] = useState('');
+  const [observation, setObservation] = useState('');
+  const [notationsList, setNotationsList] = useState([]);
   const [penalites, setPenalites] = useState({
     piedSorti: false,
     brutalite: false,
     franchissementDangereux: false,
   });
+  const [nomJuge, setNomJuge] = useState('');
+  const [cavalierId, setCavalierId] = useState(null);
+  useEffect(() => {
+    fetch('http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55')
+      .then((res) => res.json())
+      .then((json) => {
+        // 🔹 Nom du juge
+        let surename = '';
+        if (json?.epreuves && epreuve) {
+          const epreuveData = json.epreuves.find((e) => e.nom === epreuve);
+          if (epreuveData?.juge?.surename) {
+            surename = epreuveData.juge.surename;
+          }
+        }
+        if (!surename && json?.juge?.surename) {
+          surename = json.juge.surename;
+        }
+        setNomJuge(surename);
+
+        // 🔹 Récupération du cavalier_id via dossard
+        if (json?.cavaliers && dossard) {
+          const cavalier = json.cavaliers.find(c => c.dossard === Number(dossard));
+          if (cavalier) {
+            setCavalierId(cavalier.cavalier_id);
+          }
+        }
+      })
+      .catch(() => {
+        setNomJuge('');
+      });
+  }, [epreuve, dossard]);
 
   const getContratPoints = () => {
     switch (contrat) {
@@ -45,7 +81,7 @@ const FicheNotationScreen = () => {
     return total;
   };
 
-  const renderCheckbox = (selectedValue: string, setValue: (v: string) => void, label: string, value: string) => (
+  const renderCheckbox = (selectedValue, setValue, label, value) => (
     <TouchableOpacity
       style={styles.checkboxRow}
       onPress={() => setValue(value)}
@@ -58,81 +94,66 @@ const FicheNotationScreen = () => {
     </TouchableOpacity>
   );
 
-
-  // Récupération du nom du juge via l'API
-  const [nomJuge, setNomJuge] = useState('');
-
-  useEffect(() => {
-    fetch('http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55')
-      .then((res) => res.json())
-      .then((json) => {
-        // On récupère le juge de l'épreuve sélectionnée si possible, sinon le juge global
-        let surename = '';
-        if (json && json.epreuves && epreuve) {
-          const epreuveData = json.epreuves.find((e) => e.nom === epreuve);
-          if (epreuveData && epreuveData.juge) {
-            surename = epreuveData.juge.surename || '';
-          }
-        }
-        // Fallback sur le juge global si pas trouvé dans l'épreuve
-        if (!surename && json && json.juge) {
-          surename = json.juge.surename || '';
-        }
-        setNomJuge(surename);
-      })
-      .catch(() => {
-        setNomJuge('');
-      });
-  }, [epreuve]);
-
-  // Fonction pour handle le bouton sauvegarder
   const handleSave = () => {
-    // Exemple de structure, à adapter selon les vrais IDs
-    const notation = {
-      notations: [
+    const newNotation = {
+      epreuve_id: 5,
+      niveau_id: 5,
+      cavaliers: [
         {
-          epreuve_id: 5, // à remplacer par la vraie valeur si dispo
-          niveau_id: 5, // à remplacer par la vraie valeur si dispo
-          cavaliers: [
-            {
-              cavalier_id: dossard, 
-              allure: allure,
-              penalite: Object.keys(penalites).filter((k) => penalites[k as keyof typeof penalites]),
-              contrat: getContratPoints(),
-              total: getContratPoints() + getAllurePoints() + getPenalitesPoints(),
-              style: 'S',
-              notation_id: null,
-            },
-          ],
+          cavalier_id: cavalierId,
+          allure: getAllurePoints(),
+          penalite: getPenalitesPoints(),
+          contrat: getContratPoints(),
+          total: getContratPoints() + getAllurePoints() + getPenalitesPoints(),
+          style: 0,
+          Observations: observation,
         },
       ],
     };
-    console.log('JSON sauvegarde:', JSON.stringify(notation, null, 2));
+
+    const updatedList = [...notationsList, newNotation];
+    setNotationsList(updatedList);
+
+    const payload = {
+      notations: updatedList,
+    };
+
+    console.log('sauvegarde:', JSON.stringify(payload, null, 2));
+    AsyncStorage.setItem('notations', JSON.stringify(payload))
+      .then(() => {
+        console.log('Notations sauvegardées avec succès');
+      })
+      .catch((error) => {
+        console.error('Erreur lors de la sauvegarde des notations:', error);
+      });
+    router.push('/(tabs)/Listeepreuve');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Image source={require('../../assets/Logo32.png')} style={styles.logo} />
       </View>
 
-      {/* Image Header */}
       <ImageBackground
         source={require('../../assets/horse.png')}
         style={styles.imageHeader}
         resizeMode="cover"
       >
         <View style={styles.titleOverlay}>
-          {/* Nom du juge en blanc et plus haut */}
           <Text style={styles.titleText}>Fiche notation</Text>
         </View>
       </ImageBackground>
 
       <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={true}>
-        <Text style={styles.name}>Dossard : {dossard || '-'} | Épreuve : {epreuve || '-'}</Text>
+        <Text style={styles.name}>
+          Dossard : {dossard || '-'} | Épreuve : {epreuve || '-'}
+        </Text>
 
-        {/* CONTRAT */}
+        <Text style={{ textAlign: 'center', fontSize: 14, marginBottom: 10 }}>
+          Cavalier ID : {cavalierId ?? 'Non trouvé'}
+        </Text>
+
         <Text style={styles.sectionTitle}>Contrat</Text>
         {renderCheckbox(contrat, setContrat, 'Réalisé', 'réalisé')}
         {renderCheckbox(contrat, setContrat, '1 faute', '1 faute')}
@@ -140,16 +161,13 @@ const FicheNotationScreen = () => {
         {renderCheckbox(contrat, setContrat, '3 fautes', '3 fautes')}
         <Text style={styles.totalText}>Total C: {getContratPoints()}</Text>
 
-        {/* ALLURES */}
         <Text style={styles.sectionTitle}>Allures</Text>
         {renderCheckbox(allure, setAllure, 'Galop', 'galop')}
         {renderCheckbox(allure, setAllure, 'Trot', 'trot')}
         <Text style={styles.totalText}>Total A: {getAllurePoints()}</Text>
 
-        {/* PÉNALITÉS */}
         <Text style={styles.sectionTitle}>Pénalités</Text>
-        {[
-          { key: 'piedSorti', label: 'Pied sorti du couloir' },
+        {[{ key: 'piedSorti', label: 'Pied sorti du couloir' },
           { key: 'brutalite', label: 'Brutalité' },
           { key: 'franchissementDangereux', label: 'Franchissement dangereux' },
         ].map(({ key, label }) => (
@@ -157,14 +175,31 @@ const FicheNotationScreen = () => {
             key={key}
             style={styles.checkboxRow}
             onPress={() =>
-              setPenalites((prev) => ({ ...prev, [key]: !prev[key as keyof typeof penalites] }))
+              setPenalites((prev) => ({ ...prev, [key]: !prev[key] }))
             }
           >
-            <View style={[styles.checkbox, penalites[key as keyof typeof penalites] && styles.checkboxChecked]} />
+            <View style={[
+              styles.checkbox,
+              penalites[key] && styles.checkboxChecked,
+            ]} />
             <Text style={styles.checkboxLabel}>{label}</Text>
           </TouchableOpacity>
         ))}
         <Text style={styles.totalText}>Total P: {getPenalitesPoints()}</Text>
+
+        <Text style={styles.sectionTitle}>Observations</Text>
+        <TextInput
+          value={observation}
+          onChangeText={setObservation}
+          placeholder="Ajouter une observation"
+          style={{
+            borderWidth: 1,
+            borderColor: '#ccc',
+            borderRadius: 6,
+            padding: 10,
+            marginBottom: 16,
+          }}
+        />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Sauvegarder</Text>
@@ -175,12 +210,8 @@ const FicheNotationScreen = () => {
 };
 
 export default FicheNotationScreen;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: {
     height: 60,
     backgroundColor: '#d4aa2f',
@@ -189,21 +220,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingHorizontal: 10,
     position: 'relative',
-  },
-  judgeTextWhite: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 12,
-    alignSelf: 'center',
-  },
-  headerSideIcon: {
-    width: 40,
-    alignItems: 'center',
-  },
-  headerIcon: {
-    fontSize: 20,
-    color: '#000',
   },
   logo: {
     width: 32,
@@ -231,9 +247,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  form: {
-    padding: 16,
-  },
+  form: { padding: 16 },
   name: {
     fontSize: 20,
     fontWeight: 'bold',

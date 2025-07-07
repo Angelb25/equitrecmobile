@@ -1,8 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Button,
   FlatList,
   Image,
   ImageBackground,
@@ -10,7 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
 interface Epreuve {
@@ -25,7 +28,8 @@ const ListeEpreuves: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const apiUrl = 'http://100.85.16.81:3000/qrcode/getCompetitionDataFromToken?token=55';
+  const apiUrl = 'http://prod-project-32/api/qrcode/getCompetitionDataFromToken?token=55';
+  const postUrl = 'http://prod-project-32/api/notation/getNotationFromJuge';
 
   useEffect(() => {
     fetch(apiUrl)
@@ -45,6 +49,37 @@ const ListeEpreuves: React.FC = () => {
       pathname: '/epreuve',
       params: { nom: epreuve.nom },
     });
+  };
+
+  const handleSendToServer = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem('notations');
+
+      if (!storedData) {
+        Alert.alert('Erreur', 'Aucune notation trouvée à envoyer.');
+        return;
+      }
+
+      const jsonToSend = JSON.parse(storedData);
+      console.log('Données à envoyer :', jsonToSend);
+      const response = await fetch(postUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jsonToSend),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l’envoi au serveur.');
+      }
+
+      const result = await response.json();
+      Alert.alert('Succès', 'Les notations ont été envoyées.');
+      console.log('Réponse serveur :', result);
+    } catch (error) {
+      Alert.alert('Erreur', (error as Error).message);
+    }
   };
 
   const renderItem = ({ item }: { item: Epreuve }) => (
@@ -81,6 +116,11 @@ const ListeEpreuves: React.FC = () => {
           contentContainerStyle={styles.table}
         />
       )}
+
+      {/* BOUTON ENVOYER */}
+      <View style={styles.buttonContainer}>
+        <Button title="Envoyer sur le serveur" onPress={handleSendToServer} color="#ccb157" />
+      </View>
     </SafeAreaView>
   );
 };
@@ -138,6 +178,11 @@ const styles = StyleSheet.create({
     color: 'red',
     marginTop: 40,
     textAlign: 'center',
+  },
+  buttonContainer: {
+    margin: 20,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });
 
